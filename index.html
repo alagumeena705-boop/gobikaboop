@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DailyBite — Food Tracker</title>
+  <style>
+    :root {
+      --green: #39785c;
+      --green-dark: #285c43;
+      --green-light: #e8f2eb;
+      --cream: #f7f8f4;
+      --ink: #24332b;
+      --muted: #77837b;
+      --line: #e8ece7;
+      --white: #fff;
+      --orange: #edaa65;
+      --blue: #78a8c9;
+      --pink: #d68b9a;
+      --shadow: 0 12px 35px rgba(35, 60, 45, .07);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--cream);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button, input, select { font: inherit; }
+
+    .app {
+      width: min(1100px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 30px 0 50px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 34px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 15px;
+      background: var(--green);
+      color: white;
+      font-size: 23px;
+    }
+
+    .brand h1 { margin: 0; font-size: 20px; letter-spacing: -.5px; }
+    .brand p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+
+    .date-control {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 9px 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: white;
+      color: var(--muted);
+    }
+
+    .date-control input {
+      border: 0;
+      outline: 0;
+      color: var(--ink);
+      background: transparent;
+    }
+
+    .welcome { margin-bottom: 24px; }
+    .welcome h2 { margin: 0 0 6px; font-size: clamp(24px, 4vw, 31px); letter-spacing: -1px; }
+    .welcome p { margin: 0; color: var(--muted); }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .card {
+      padding: 23px;
+      background: var(--white);
+      border: 1px solid rgba(30, 60, 40, .04);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .card-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .card-heading h3 { margin: 0; font-size: 17px; }
+    .subtle { color: var(--muted); font-size: 13px; }
+
+    .calorie-panel {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .ring {
+      --progress: 0%;
+      width: 170px;
+      height: 170px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: conic-gradient(var(--green) var(--progress), #edf1ed 0);
+      position: relative;
+      margin: auto;
+    }
+
+    .ring::before {
+      content: "";
+      position: absolute;
+      inset: 12px;
+      background: white;
+      border-radius: 50%;
+    }
+
+    .ring-content { z-index: 1; text-align: center; }
+    .ring-content strong { display: block; font-size: 30px; letter-spacing: -1px; }
+    .ring-content span { color: var(--muted); font-size: 12px; }
+
+    .calorie-copy .eyebrow {
+      margin: 0 0 5px;
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+    }
+
+    .calorie-copy .remaining { margin: 0; font-size: 23px; font-weight: 700; }
+    .target-control { margin-top: 14px; color: var(--muted); font-size: 13px; }
+    .target-control input {
+      width: 78px;
+      margin-left: 5px;
+      padding: 6px 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--ink);
+    }
+
+    .macro-list { display: grid; gap: 17px; }
+    .macro-top { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
+    .macro-top span:last-child { color: var(--muted); }
+    .track { height: 8px; overflow: hidden; border-radius: 20px; background: #eef1ee; }
+    .fill { height: 100%; width: 0; border-radius: inherit; transition: width .3s ease; }
+    .fill.protein { background: var(--green); }
+    .fill.carbs { background: var(--orange); }
+    .fill.fat { background: var(--pink); }
+
+    .meals-card { margin-top: 20px; }
+    .meal-list { display: grid; gap: 10px; }
+    .meal-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+    }
+
+    .meal-emoji {
+      display: grid;
+      place-items: center;
+      width: 43px;
+      height: 43px;
+      flex: 0 0 auto;
+      border-radius: 12px;
+      background: var(--green-light);
+      font-size: 21px;
+    }
+
+    .meal-info { min-width: 0; flex: 1; }
+    .meal-info strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+    .meal-info span { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; }
+    .meal-calories { white-space: nowrap; font-size: 14px; font-weight: 700; }
+    .delete-btn {
+      border: 0;
+      background: transparent;
+      color: #a4ada6;
+      cursor: pointer;
+      font-size: 19px;
+      padding: 4px;
+    }
+    .delete-btn:hover { color: #c35b5b; }
+
+    .empty {
+      padding: 30px 15px;
+      text-align: center;
+      color: var(--muted);
+      border: 1px dashed #dce4dc;
+      border-radius: 13px;
+      font-size: 14px;
+    }
+    .empty span { display: block; margin-bottom: 8px; font-size: 27px; }
+
+    .form-card { position: sticky; top: 20px; }
+    .form-card h3 { margin: 0 0 5px; font-size: 18px; }
+    .form-card > p { margin: 0 0 20px; color: var(--muted); font-size: 13px; }
+
+    .field { margin-bottom: 14px; }
+    .field label { display: block; margin-bottom: 7px; font-size: 12px; font-weight: 650; }
+    .field input, .field select {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      outline: none;
+      background: white;
+      color: var(--ink);
+    }
+    .field input:focus, .field select:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(57,120,92,.1); }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+    .add-btn {
+      width: 100%;
+      padding: 12px;
+      border: 0;
+      border-radius: 11px;
+      background: var(--green);
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .2s, transform .2s;
+    }
+    .add-btn:hover { background: var(--green-dark); transform: translateY(-1px); }
+
+    @media (max-width: 760px) {
+      .dashboard { grid-template-columns: 1fr; }
+      .form-card { position: static; grid-row: 1; }
+    }
+
+    @media (max-width: 480px) {
+      .app { width: min(100% - 24px, 1100px); padding-top: 18px; }
+      header { align-items: flex-start; flex-direction: column; margin-bottom: 25px; }
+      .date-control { width: 100%; }
+      .date-control input { flex: 1; }
+      .card { padding: 18px; border-radius: 16px; }
+      .calorie-panel { grid-template-columns: 1fr; gap: 18px; text-align: center; }
+      .calorie-copy .remaining { font-size: 21px; }
+      .target-control { margin-top: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">🥑</div>
+        <div>
+          <h1>DailyBite</h1>
+          <p>Your food, your balance</p>
+        </div>
+      </div>
+
+      <label class="date-control">
+        <span aria-hidden="true">📅</span>
+        <input id="selectedDate" type="date" aria-label="Choose a date" />
+      </label>
+    </header>
+
+    <section class="welcome">
+      <h2>Today at a glance</h2>
+      <p>A little progress adds up. Keep nourishing yourself well.</p>
+    </section>
+
+    <div class="dashboard">
+      <section>
+        <article class="card">
+          <div class="card-heading">
+            <h3>Daily summary</h3>
+            <span class="subtle">Calories &amp; macros</span>
+          </div>
+
+          <div class="calorie-panel">
+            <div class="ring" id="calorieRing">
+              <div class="ring-content">
+                <strong id="caloriesConsumed">0</strong>
+                <span>calories eaten</span>
+              </div>
+            </div>
+
+            <div class="calorie-copy">
+              <p class="eyebrow">Daily goal</p>
+              <p class="remaining"><span id="caloriesRemaining">2,000</span> left</p>
+              <label class="target-control">
+                Goal
+                <input id="calorieGoal" type="number" min="1" value="2000" aria-label="Daily calorie goal" />
+                kcal
+              </label>
+            </div>
+          </div>
+
+          <div class="macro-list" style="margin-top: 25px">
+            <div>
+              <div class="macro-top"><strong>Protein</strong><span><b id="proteinValue">0</b> / 120 g</span></div>
+              <div class="track"><div class="fill protein" id="proteinBar"></div></div>
+            </div>
+            <div>
+              <div class="macro-top"><strong>Carbs</strong><span><b id="carbsValue">0</b> / 250 g</span></div>
+              <div class="track"><div class="fill carbs" id="carbsBar"></div></div>
+            </div>
+            <div>
+              <div class="macro-top"><strong>Fat</strong><span><b id="fatValue">0</b> / 70 g</span></div>
+              <div class="track"><div class="fill fat" id="fatBar"></div></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card meals-card">
+          <div class="card-heading">
+            <h3>Food diary</h3>
+            <span class="subtle" id="entryCount">0 entries</span>
+          </div>
+          <div class="meal-list" id="mealList"></div>
+        </article>
+      </section>
+
+      <aside class="card form-card">
+        <h3>Log a food</h3>
+        <p>Add a meal or snack to your diary.</p>
+
+        <form id="foodForm">
+          <div class="field">
+            <label for="foodName">Food name</label>
+            <input id="foodName" type="text" placeholder="e.g. Avocado toast" required maxlength="70" />
+          </div>
+
+          <div class="field">
+            <label for="mealType">Meal</label>
+            <select id="mealType">
+              <option value="Breakfast">Breakfast</option>
+              <option value="Lunch">Lunch</option>
+              <option value="Dinner">Dinner</option>
+              <option value="Snack">Snack</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="foodCalories">Calories (kcal)</label>
+            <input id="foodCalories" type="number" min="0" placeholder="350" required />
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label for="foodProtein">Protein (g)</label>
+              <input id="foodProtein" type="number" min="0" step="0.1" placeholder="12" />
+            </div>
+            <div class="field">
+              <label for="foodCarbs">Carbs (g)</label>
+              <input id="foodCarbs" type="number" min="0" step="0.1" placeholder="40" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="foodFat">Fat (g)</label>
+            <input id="foodFat" type="number" min="0" step="0.1" placeholder="10" />
+          </div>
+
+          <button class="add-btn" type="submit">＋ Add to diary</button>
+        </form>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "dailybite-food-entries";
+    const GOAL_KEY = "dailybite-calorie-goal";
+
+    const dateInput = document.getElementById("selectedDate");
+    const form = document.getElementById("foodForm");
+    const mealList = document.getElementById("mealList");
+    const goalInput = document.getElementById("calorieGoal");
+
+    const today = new Date();
+    dateInput.value = [
+      today.getFullYear(),
+      String(today.getMonth() + 1).padStart(2, "0"),
+      String(today.getDate()).padStart(2, "0")
+    ].join("-");
+
+    let entries = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    goalInput.value = localStorage.getItem(GOAL_KEY) || "2000";
+
+    const mealEmojis = {
+      Breakfast: "🍳",
+      Lunch: "🥗",
+      Dinner: "🍲",
+      Snack: "🍎"
+    };
+
+    function saveEntries() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    }
+
+    function updateDashboard() {
+      const dayEntries = entries.filter(entry => entry.date === dateInput.value);
+      const totals = dayEntries.reduce((sum, entry) => {
+        sum.calories += entry.calories;
+        sum.protein += entry.protein;
+        sum.carbs += entry.carbs;
+        sum.fat += entry.fat;
+        return sum;
+      }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
+
+      const goal = Math.max(1, Number(goalInput.value) || 2000);
+      const remaining = Math.max(0, goal - totals.calories);
+      const progress = Math.min(100, (totals.calories / goal) * 100);
+
+      document.getElementById("caloriesConsumed").textContent = Math.round(totals.calories).toLocaleString();
+      document.getElementById("caloriesRemaining").textContent = remaining.toLocaleString();
+      document.getElementById("calorieRing").style.setProperty("--progress", progress + "%");
+
+      document.getElementById("proteinValue").textContent = Math.round(totals.protein);
+      document.getElementById("carbsValue").textContent = Math.round(totals.carbs);
+      document.getElementById("fatValue").textContent = Math.round(totals.fat);
+
+      document.getElementById("proteinBar").style.width = Math.min(100, totals.protein / 120 * 100) + "%";
+      document.getElementById("carbsBar").style.width = Math.min(100, totals.carbs / 250 * 100) + "%";
+      document.getElementById("fatBar").style.width = Math.min(100, totals.fat / 70 * 100) + "%";
+
+      document.getElementById("entryCount").textContent =
+        `${dayEntries.length} ${dayEntries.length === 1 ? "entry" : "entries"}`;
+
+      renderEntries(dayEntries);
+    }
+
+    function renderEntries(dayEntries) {
+      mealList.replaceChildren();
+
+      if (dayEntries.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.innerHTML = "<span>🍽️</span>No foods logged for this day yet.";
+        mealList.appendChild(empty);
+        return;
+      }
+
+      dayEntries.forEach(entry => {
+        const item = document.createElement("div");
+        item.className = "meal-item";
+
+        const emoji = document.createElement("div");
+        emoji.className = "meal-emoji";
+        emoji.textContent = mealEmojis[entry.meal] || "🍴";
+
+        const info = document.createElement("div");
+        info.className = "meal-info";
+
+        const name = document.createElement("strong");
+        name.textContent = entry.name;
+
+        const details = document.createElement("span");
+        details.textContent = `${entry.meal} · P ${entry.protein}g · C ${entry.carbs}g · F ${entry.fat}g`;
+
+        info.append(name, details);
+
+        const calories = document.createElement("div");
+        calories.className = "meal-calories";
+        calories.textContent = `${entry.calories} kcal`;
+
+        const remove = document.createElement("button");
+        remove.className = "delete-btn";
+        remove.type = "button";
+        remove.setAttribute("aria-label", `Delete ${entry.name}`);
+        remove.textContent = "×";
+        remove.addEventListener("click", () => {
+          entries = entries.filter(savedEntry => savedEntry.id !== entry.id);
+          saveEntries();
+          updateDashboard();
+        });
+
+        item.append(emoji, info, calories, remove);
+        mealList.appendChild(item);
+      });
+    }
+
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+
+      entries.push({
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        date: dateInput.value,
+        name: document.getElementById("foodName").value.trim(),
+        meal: document.getElementById("mealType").value,
+        calories: Number(document.getElementById("foodCalories").value) || 0,
+        protein: Number(document.getElementById("foodProtein").value) || 0,
+        carbs: Number(document.getElementById("foodCarbs").value) || 0,
+        fat: Number(document.getElementById("foodFat").value) || 0
+      });
+
+      saveEntries();
+      form.reset();
+      updateDashboard();
+      document.getElementById("foodName").focus();
+    });
+
+    dateInput.addEventListener("change", updateDashboard);
+
+    goalInput.addEventListener("input", () => {
+      localStorage.setItem(GOAL_KEY, goalInput.value);
+      updateDashboard();
+    });
+
+    updateDashboard();
+  </script>
+</body>
+</html>
